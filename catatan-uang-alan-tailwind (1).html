@@ -1,0 +1,130 @@
+<html lang="id">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1" name="viewport"/>
+  <title>
+   Catatan Uang Alan
+  </title>
+  <script src="https://cdn.tailwindcss.com">
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&amp;display=swap" rel="stylesheet"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
+  <style>
+   body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #f0f9ff, #a1eafb);
+      min-height: 100vh;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .fade-in {
+      animation: fadeIn 0.6s ease-in-out;
+    }
+  </style>
+ </head>
+ <body class="flex items-center justify-center p-5 bg-gradient-to-br from-green-100 via-green-200 to-green-300">
+  <main class="bg-white max-w-md w-full rounded-3xl shadow-2xl p-8 fade-in relative overflow-hidden">
+   <img alt="Icon uang koin emas bersinar dengan latar hijau" aria-hidden="true" class="absolute top-6 right-6 opacity-20 pointer-events-none select-none" height="80" src="https://storage.googleapis.com/a1aa/image/2cb66932-2edd-4ca5-3faf-f5959f0b4daa.jpg" width="80"/>
+   <h2 class="text-center text-3xl font-extrabold text-green-800 mb-8 flex items-center justify-center gap-3">
+    <img alt="Ikon kantong uang hijau" class="inline-block" height="32" src="https://storage.googleapis.com/a1aa/image/5b22ef88-3825-44ea-7ee6-fb14e41f6221.jpg" width="32"/>
+    Catatan Uang Alan
+    <img alt="Ikon kantong uang hijau" class="inline-block" height="32" src="https://storage.googleapis.com/a1aa/image/5b22ef88-3825-44ea-7ee6-fb14e41f6221.jpg" width="32"/>
+   </h2>
+   <input aria-label="Keterangan" autocomplete="off" class="w-full px-5 py-3 mb-4 border border-green-400 rounded-2xl text-base focus:outline-none focus:ring-4 focus:ring-green-300 shadow-sm" id="ket" placeholder="📝 Keterangan" type="text"/>
+   <input aria-label="Jumlah uang" autocomplete="off" class="w-full px-5 py-3 mb-4 border border-green-400 rounded-2xl text-base focus:outline-none focus:ring-4 focus:ring-green-300 shadow-sm" id="jumlah" min="0" placeholder="💵 Jumlah (contoh: 10000)" type="number"/>
+   <select aria-label="Tipe transaksi" class="w-full px-5 py-3 mb-6 border border-green-400 rounded-2xl text-base focus:outline-none focus:ring-4 focus:ring-green-300 shadow-sm" id="tipe">
+    <option value="masuk">
+     📥 Uang Masuk
+    </option>
+    <option value="keluar">
+     📤 Uang Keluar
+    </option>
+   </select>
+   <button aria-label="Tambah Catatan" class="w-full bg-green-600 hover:bg-green-700 text-white font-extrabold py-3 rounded-2xl transition-colors duration-300 flex items-center justify-center gap-3 shadow-lg shadow-green-400/50" onclick="kirimData()">
+    <i class="fas fa-plus-circle fa-lg">
+    </i>
+    + Tambah Catatan
+   </button>
+   <div aria-live="polite" class="bg-green-100 text-green-900 text-center text-xl font-extrabold rounded-2xl py-5 mt-10 select-none shadow-inner shadow-green-300" id="totalSaldo">
+    Total Saldo: Rp 0
+   </div>
+   <section aria-label="Daftar catatan uang" class="mt-8 space-y-4 max-h-96 overflow-y-auto" id="data">
+   </section>
+  </main>
+  <script>
+   const url = "https://script.google.com/macros/s/AKfycbzf76RbfQi8WF_9wy-Cj3CuuzfNj54qjd1cPCDYB-hM4Ana44Fplvug6T65dyZxmo8e/exec";
+
+    function formatRupiah(angka) {
+      return angka.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    }
+
+    function kirimData() {
+      const ket = document.getElementById('ket').value.trim();
+      const jumlahInput = document.getElementById('jumlah').value;
+      const jumlah = parseInt(jumlahInput);
+      const tipe = document.getElementById('tipe').value;
+
+      if (!ket || !jumlahInput || isNaN(jumlah) || jumlah <= 0 || !tipe) {
+        alert("Isi semua data dengan benar yaa 🥺");
+        return;
+      }
+
+      fetch(url, {
+        method: 'POST',
+        body: JSON.stringify({ ket, jumlah, tipe }),
+      }).then(() => {
+        document.getElementById('ket').value = "";
+        document.getElementById('jumlah').value = "";
+        loadData();
+      }).catch(() => {
+        alert("Gagal mengirim data, coba lagi nanti.");
+      });
+    }
+
+    function loadData() {
+      fetch(url)
+        .then(res => res.json())
+        .then(data => {
+          let html = "";
+          let total = 0;
+          data.reverse().forEach(d => {
+            const waktu = new Date(d.waktu);
+            const waktuFormatted = waktu.toLocaleString('id-ID', {
+              day: '2-digit',
+              month: 'short',
+              year: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit',
+            });
+            const tipeLabel = d.tipe === "masuk" ? "Uang Masuk" : "Uang Keluar";
+            const tipeColor = d.tipe === "masuk" ? "text-green-700" : "text-red-600";
+            html += `
+              <article tabindex="0" class="entry bg-green-50 rounded-2xl p-5 hover:bg-green-100 transition-colors duration-300 focus:outline-none focus:ring-4 focus:ring-green-400 shadow-sm">
+                <div class="flex justify-between items-center mb-2">
+                  <p class="font-semibold text-green-900">${d.ket}</p>
+                  <span class="${tipeColor} font-extrabold">Rp ${formatRupiah(d.jumlah)}</span>
+                </div>
+                <div class="flex justify-between items-center text-sm text-green-700">
+                  <time datetime="${waktu.toISOString()}">${waktuFormatted}</time>
+                  <span class="italic">${tipeLabel}</span>
+                </div>
+              </article>
+            `;
+            if (d.tipe === "masuk") total += Number(d.jumlah);
+            else if (d.tipe === "keluar") total -= Number(d.jumlah);
+          });
+          document.getElementById('data').innerHTML = html;
+          document.getElementById('totalSaldo').textContent = `Total Saldo: Rp ${formatRupiah(total)}`;
+        })
+        .catch(() => {
+          document.getElementById('data').innerHTML = `<p class="text-center text-red-600">Gagal memuat data.</p>`;
+          document.getElementById('totalSaldo').textContent = `Total Saldo: Rp 0`;
+        });
+    }
+
+    loadData();
+  </script>
+ </body>
+</html>
